@@ -21,8 +21,12 @@ static void concatenateString(const char *yytext_ptr);
 digit	[0-9]
 digits  digit+
 letter	[a-zA-Z_]
+nonzeroDecInt [1-9][0-9]*
+nonZeroDec 0\.0|0\.{digit}*[1-9]|[1-9]{digit}*(\.{digits}[1-9])? 
+nonZeroOctInt 0+[0-7]*[1-7][0-7]*  
 
-%Start VarName OctalNum BADINPUT
+%Start VARNAME STRMODE STRQUOTE STREND STROUT COMMENT 
+
 %%
 
     /* Delimiter */
@@ -39,56 +43,94 @@ letter	[a-zA-Z_]
 "-" { TOKEN_CHAR('-'); }
 "*" { TOKEN_CHAR('*'); }
 "/" { TOKEN_CHAR('/'); }
-"mod" { TOKEN("mod"); }
-":=" { TOKEN(":="); }
+"mod" { TOKEN(mod); }
+":=" { TOKEN(:=); }
 "<" { TOKEN_CHAR('<'); }
-"<=" { TOKEN("<="); }
-"<>" { TOKEN("<>"); }
-">=" { TOKEN(">="); }
+"<=" { TOKEN(<=); }
+"<>" { TOKEN(<>); }
+">=" { TOKEN(>=); }
 ">" { TOKEN_CHAR('>'); }
 "=" { TOKEN_CHAR('='); }
-"and" { TOKEN("and"); }
-"or" { TOKEN("or"); }
-"not" { TOKEN("not"); }
+"and" { TOKEN(and); }
+"or" { TOKEN(or); }
+"not" { TOKEN(not); }
  
     /* Reserved Words */
-"var" { TOKEN("KWvar"); }
-"def" { TOKEN("def"); }
-"array" { TOKEN("KWarray"); }
-"of" { TOKEN("KWof"); }
-"boolean" { TOKEN("KWboolean"); }
-"integer" { TOKEN("KWinteger"); }
-"real" { TOKEN("KWreal"); }
-"string" { TOKEN("KWstring"); }
-"true" { TOKEN("KWtrue"); }
-"false" { TOKEN("KWfalse"); }
-"while" { TOKEN("KWwhile"); }
-"do" { TOKEN("KWdo"); }
-"if" { TOKEN("KWif"); }
-"then" { TOKEN("KWthen"); }
-"else" { TOKEN("KWelse"); }
-"for" { TOKEN("KWfor"); }
-"to" { TOKEN("KWto"); }
-"begin" { TOKEN("KWbegin"); }
-"end" { TOKEN("KWend"); }
-"print" { TOKEN("KWprint"); }
-"read" { TOKEN("KWread"); }
-"return" { TOKEN("KWreturn"); }
+"var" { TOKEN(KWvar); }
+"def" { TOKEN(def); }
+"array" { TOKEN(KWarray); }
+"of" { TOKEN(KWof); }
+"boolean" { TOKEN(KWboolean); }
+"integer" { TOKEN(KWinteger); }
+"real" { TOKEN(KWreal); }
+"string" { TOKEN(KWstring); }
+"true" { TOKEN(KWtrue); }
+"false" { TOKEN(KWfalse); }
+"while" { TOKEN(KWwhile); }
+"do" { TOKEN(KWdo); }
+"if" { TOKEN(KWif); }
+"then" { TOKEN(KWthen); }
+"else" { TOKEN(KWelse); }
+"for" { TOKEN(KWfor); }
+"to" { TOKEN(KWto); }
+"begin" { TOKEN(KWbegin); }
+"end" { TOKEN(KWend); }
+"print" { TOKEN(KWprint); }
+"read" { TOKEN(KWread); }
+"return" { TOKEN(KWreturn); }
 
     /* Identifiers */
-<VarName>{letter}([{letter}{digit}])* { TOKEN("id: %s", yytext); BEGIN 0; }
+<VARNAME>{letter}([{letter}{digit}])* { TOKEN_STRING(id, yytext); BEGIN 0; }
 
     /* Integer Constants */
-0+/{digits} { BEGIN OctalNum; }
-<OctalNum>{digits} { TOKEN("oct_integer: %s", yytext); BEGIN 0; }
-{digits} { TOKEN("integer: %s", yytext); }
+0+[0-7]+ { TOKEN_STRING(oct_integer, yytext); }
+{digits} { TOKEN_STRING(integer, yytext); }
 
     /* Floating-Point Consants */
-{digits}.{digits}*00+ { BEGIN BADINPUT; }
-{digits}.{digits}*0? { TOKEN(""); } 
+{digits}\.(0?|{digits}[1-9]/[^0]/) { TOKEN_STRING(float, yytext); } 
 
     /* Scientific Notations */
+    /* base: nonzero oct/dec int OR nonzero dec float */
+    /* exponent: dec int w/ optional sign */
+    /* nonzero octal: 0+[0-7]*[1-7][0-7]* */
+    /* nonzero dec int/float: 0\.0|0\.{digit}*[1-9]|[1-9]{digit}*(\.{digits}[1-9])? */
+    /* exponent: dec int w/ optional sign */
+({nonZeroDec}|{nonZeroOct})[Ee][\+-]?(0|[1-9][0-9]*) { TOKEN_STRING(scientific, yytext); }
+
+
     /* String Constants */
+    /* TODO !! */
+<STROUT>\" { TOKEN_STRING(string, yytext); BEGIN 0; }
+<STREND>\" { BEGIN STROUT; }
+<STRMODE>[^\n]*/\" { yymore(); BEGIN STREND; }
+<STRMODE>[^\n]*/\"{2} { yymore(); BEGIN STRQUOTE; }
+<STRQUOTE>\"/\" { ; }
+<STRQUOTE>\"/[^\"] { yymore(); BEGIN STRMODE; }
+\"/[^\n]*\" { BEGIN STRMODE; }
+
+    /* Pseudocomments */
+"//"&[ST][+-][^\n]* { 
+    if (yytext[2] == 'S' && yytext[3] == '+' ) {
+    	opt_src = 1;	    
+    } 
+    if (yytext[2] == 'S' && yytext[3] == '-' ) {
+ 	opt_src = 0;   
+    } 
+    if (yytext[2] == 'T' && yytext[3] == '+' ) {
+    	opt_tok = 1;
+    } 
+    if (yytext[2] == 'T' && yytext[3] == '-' ) {
+    	opt_tok = 0;
+    } 
+}
+
+    /* Comments */
+"//"[^\n]* { ; }
+"/*" { BEGIN COMMENT; }
+<COMMENT>"*/" { BEGIN 0; }
+<COMMENT>. { ; }
+
+    /* Newline */
 \n {
     if (opt_src) {
         printf("%d: %s\n", line_num, buffer);
@@ -97,7 +139,6 @@ letter	[a-zA-Z_]
     buffer[0] = '\0';
     buffer_ptr = buffer;
 }
-
     /* Catch the character which is not accepted by rules above */
 . {
     printf("Error at line %d: bad character \"%s\"\n", line_num, yytext);
