@@ -10,16 +10,85 @@
 uint32_t line_num = 1;
 static char buffer[MAX_LINE_LENG];
 
-static uint32_t opt_src = 1;
-static uint32_t opt_tok = 1;
+static uint32_t opt_src = 1;	// listing option
+static uint32_t opt_tok = 1;	// token option
 static char *buffer_ptr = buffer;
 
 static void concatenateString(const char *yytext_ptr);
 
 %}
 
+digit	[0-9]
+digits  digit+
+letter	[a-zA-Z_]
+
+%Start VarName OctalNum BADINPUT
 %%
+
+    /* Delimiter */
+"," { TOKEN_CHAR('('); }
+";" { TOKEN_CHAR(';'); }
+":" { TOKEN_CHAR(':'); }
 "(" { TOKEN_CHAR('('); }
+")" { TOKEN_CHAR(')'); }
+"[" { TOKEN_CHAR('['); }
+"]" { TOKEN_CHAR(']'); }
+
+    /* Arithmetic, Relational, and Logical Operators */
+"+" { TOKEN_CHAR('+'); }
+"-" { TOKEN_CHAR('-'); }
+"*" { TOKEN_CHAR('*'); }
+"/" { TOKEN_CHAR('/'); }
+"mod" { TOKEN("mod"); }
+":=" { TOKEN(":="); }
+"<" { TOKEN_CHAR('<'); }
+"<=" { TOKEN("<="); }
+"<>" { TOKEN("<>"); }
+">=" { TOKEN(">="); }
+">" { TOKEN_CHAR('>'); }
+"=" { TOKEN_CHAR('='); }
+"and" { TOKEN("and"); }
+"or" { TOKEN("or"); }
+"not" { TOKEN("not"); }
+ 
+    /* Reserved Words */
+"var" { TOKEN("KWvar"); }
+"def" { TOKEN("def"); }
+"array" { TOKEN("KWarray"); }
+"of" { TOKEN("KWof"); }
+"boolean" { TOKEN("KWboolean"); }
+"integer" { TOKEN("KWinteger"); }
+"real" { TOKEN("KWreal"); }
+"string" { TOKEN("KWstring"); }
+"true" { TOKEN("KWtrue"); }
+"false" { TOKEN("KWfalse"); }
+"while" { TOKEN("KWwhile"); }
+"do" { TOKEN("KWdo"); }
+"if" { TOKEN("KWif"); }
+"then" { TOKEN("KWthen"); }
+"else" { TOKEN("KWelse"); }
+"for" { TOKEN("KWfor"); }
+"to" { TOKEN("KWto"); }
+"begin" { TOKEN("KWbegin"); }
+"end" { TOKEN("KWend"); }
+"print" { TOKEN("KWprint"); }
+"read" { TOKEN("KWread"); }
+"return" { TOKEN("KWreturn"); }
+
+    /* Identifiers */
+<VarName>{letter}([{letter}{digit}])* { TOKEN("id: %s", yytext); BEGIN 0; }
+
+    /* Integer Constants */
+0+/{digits} { BEGIN OctalNum; }
+<OctalNum>{digits} { TOKEN("oct_integer: %s", yytext); BEGIN 0; }
+{digits} { TOKEN("integer: %s", yytext); }
+
+    /* Floating-Point Consants */
+{digits}.{digits}*00+ { BEGIN BADINPUT; }
+{digits}.{digits}*0? { TOKEN(""); } 
+
+    /* Scientific Notations */
+    /* String Constants */
 \n {
     if (opt_src) {
         printf("%d: %s\n", line_num, buffer);
@@ -37,6 +106,7 @@ static void concatenateString(const char *yytext_ptr);
 
 %%
 
+/* Put string in buffer */
 static void concatenateString(const char *yytext_ptr) {
     while (*yytext_ptr) {
         *buffer_ptr = *yytext_ptr;
