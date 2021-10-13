@@ -1,5 +1,6 @@
 %{
 #include <stdint.h>
+#include <string.h>
 
 #define LIST                concatenateString(yytext)
 #define TOKEN(t)            { LIST; if (opt_tok) printf("<%s>\n", #t); }
@@ -8,7 +9,9 @@
 #define MAX_LINE_LENG       512
 
 uint32_t line_num = 1;
+uint32_t str_len = 1;
 static char buffer[MAX_LINE_LENG];
+static char strbuffer[MAX_LINE_LENG];
 
 static uint32_t opt_src = 1;	// listing option
 static uint32_t opt_tok = 1;	// token option
@@ -19,75 +22,73 @@ static void concatenateString(const char *yytext_ptr);
 %}
 
 digit	[0-9]
-digits  digit+
+digits  {digit}+
 letter	[a-zA-Z_]
 nonzeroDecInt [1-9][0-9]*
 nonZeroDec 0\.0|0\.{digit}*[1-9]|[1-9]{digit}*(\.{digits}[1-9])? 
-nonZeroOctInt 0+[0-7]*[1-7][0-7]*  
+nonZeroOctInt 0+[1-7][0-7]*  
 
-%Start VARNAME STRMODE STRQUOTE STREND STROUT COMMENT 
+%Start STRMODE STRQUOTE STREND LONGCOMMENT SHORTCOMMENT
 
 %%
 
     /* Delimiter */
-"," { TOKEN_CHAR('('); }
-";" { TOKEN_CHAR(';'); }
-":" { TOKEN_CHAR(':'); }
-"(" { TOKEN_CHAR('('); }
-")" { TOKEN_CHAR(')'); }
-"[" { TOKEN_CHAR('['); }
-"]" { TOKEN_CHAR(']'); }
+<INITIAL>"," { TOKEN_CHAR(','); }
+<INITIAL>";" { TOKEN_CHAR(';'); }
+<INITIAL>":" { TOKEN_CHAR(':'); }
+<INITIAL>"(" { TOKEN_CHAR('('); }
+<INITIAL>")" { TOKEN_CHAR(')'); }
+<INITIAL>"[" { TOKEN_CHAR('['); }
+<INITIAL>"]" { TOKEN_CHAR(']'); }
 
     /* Arithmetic, Relational, and Logical Operators */
-"+" { TOKEN_CHAR('+'); }
-"-" { TOKEN_CHAR('-'); }
-"*" { TOKEN_CHAR('*'); }
-"/" { TOKEN_CHAR('/'); }
-"mod" { TOKEN(mod); }
-":=" { TOKEN(:=); }
-"<" { TOKEN_CHAR('<'); }
-"<=" { TOKEN(<=); }
-"<>" { TOKEN(<>); }
-">=" { TOKEN(>=); }
-">" { TOKEN_CHAR('>'); }
-"=" { TOKEN_CHAR('='); }
-"and" { TOKEN(and); }
-"or" { TOKEN(or); }
-"not" { TOKEN(not); }
+<INITIAL>"+" { TOKEN_CHAR('+'); }
+<INITIAL>"-" { TOKEN_CHAR('-'); }
+<INITIAL>"*" { TOKEN_CHAR('*'); }
+<INITIAL>"/" { TOKEN_CHAR('/'); }
+<INITIAL>"mod" { TOKEN(mod); }
+<INITIAL>":=" { TOKEN(:=); }
+<INITIAL>"<" { TOKEN_CHAR('<'); }
+<INITIAL>"<=" { TOKEN(<=); }
+<INITIAL>"<>" { TOKEN(<>); }
+<INITIAL>">=" { TOKEN(>=); }
+<INITIAL>">" { TOKEN_CHAR('>'); }
+<INITIAL>"=" { TOKEN_CHAR('='); }
+<INITIAL>"and" { TOKEN(and); }
+<INITIAL>"or" { TOKEN(or); }
+<INITIAL>"not" { TOKEN(not); }
  
     /* Reserved Words */
-"var" { TOKEN(KWvar); }
-"def" { TOKEN(def); }
-"array" { TOKEN(KWarray); }
-"of" { TOKEN(KWof); }
-"boolean" { TOKEN(KWboolean); }
-"integer" { TOKEN(KWinteger); }
-"real" { TOKEN(KWreal); }
-"string" { TOKEN(KWstring); }
-"true" { TOKEN(KWtrue); }
-"false" { TOKEN(KWfalse); }
-"while" { TOKEN(KWwhile); }
-"do" { TOKEN(KWdo); }
-"if" { TOKEN(KWif); }
-"then" { TOKEN(KWthen); }
-"else" { TOKEN(KWelse); }
-"for" { TOKEN(KWfor); }
-"to" { TOKEN(KWto); }
-"begin" { TOKEN(KWbegin); }
-"end" { TOKEN(KWend); }
-"print" { TOKEN(KWprint); }
-"read" { TOKEN(KWread); }
-"return" { TOKEN(KWreturn); }
-
-    /* Identifiers */
-<VARNAME>{letter}([{letter}{digit}])* { TOKEN_STRING(id, yytext); BEGIN 0; }
+<INITIAL>"var" { TOKEN(KWvar); }
+<INITIAL>"def" { TOKEN(KWdef); }
+<INITIAL>"array" { TOKEN(KWarray); }
+<INITIAL>"of" { TOKEN(KWof); }
+<INITIAL>"boolean" { TOKEN(KWboolean); }
+<INITIAL>"integer" { TOKEN(KWinteger); }
+<INITIAL>"real" { TOKEN(KWreal); }
+<INITIAL>"string" { TOKEN(KWstring); }
+<INITIAL>"true" { TOKEN(KWtrue); }
+<INITIAL>"false" { TOKEN(KWfalse); }
+<INITIAL>"while" { TOKEN(KWwhile); }
+<INITIAL>"do" { TOKEN(KWdo); }
+<INITIAL>"if" { TOKEN(KWif); }
+<INITIAL>"then" { TOKEN(KWthen); }
+<INITIAL>"else" { TOKEN(KWelse); }
+<INITIAL>"for" { TOKEN(KWfor); }
+<INITIAL>"to" { TOKEN(KWto); }
+<INITIAL>"begin" { TOKEN(KWbegin); }
+<INITIAL>"end" { TOKEN(KWend); }
+<INITIAL>"print" { TOKEN(KWprint); }
+<INITIAL>"read" { TOKEN(KWread); }
+<INITIAL>"return" { TOKEN(KWreturn); }
 
     /* Integer Constants */
-0+[0-7]+ { TOKEN_STRING(oct_integer, yytext); }
-{digits} { TOKEN_STRING(integer, yytext); }
+<INITIAL>0+[0-7]+ { TOKEN_STRING(oct_integer, yytext); }
+<INITIAL>{digits} { TOKEN_STRING(integer, yytext); }
 
     /* Floating-Point Consants */
-{digits}\.(0?|{digits}[1-9]/[^0]/) { TOKEN_STRING(float, yytext); } 
+	/*{digits}\.(0?|{digits}[1-9]/[^0]/) { TOKEN_STRING(float, yytext); }*/
+<INITIAL>{digits}\.(0?|{digit}*[1-9]) { TOKEN_STRING(float, yytext); }
 
     /* Scientific Notations */
     /* base: nonzero oct/dec int OR nonzero dec float */
@@ -95,40 +96,71 @@ nonZeroOctInt 0+[0-7]*[1-7][0-7]*
     /* nonzero octal: 0+[0-7]*[1-7][0-7]* */
     /* nonzero dec int/float: 0\.0|0\.{digit}*[1-9]|[1-9]{digit}*(\.{digits}[1-9])? */
     /* exponent: dec int w/ optional sign */
-({nonZeroDec}|{nonZeroOct})[Ee][\+-]?(0|[1-9][0-9]*) { TOKEN_STRING(scientific, yytext); }
+<INITIAL>{nonZeroDec}[Ee][\+-]?(0|[1-9][0-9]*) { TOKEN_STRING(scientific, yytext); }
 
 
     /* String Constants */
-    /* TODO !! */
-<STROUT>\" { TOKEN_STRING(string, yytext); BEGIN 0; }
-<STREND>\" { BEGIN STROUT; }
-<STRMODE>[^\n]*/\" { yymore(); BEGIN STREND; }
-<STRMODE>[^\n]*/\"{2} { yymore(); BEGIN STRQUOTE; }
-<STRQUOTE>\"/\" { ; }
-<STRQUOTE>\"/[^\"] { yymore(); BEGIN STRMODE; }
-\"/[^\n]*\" { BEGIN STRMODE; }
+    /* 1. When encounter a " followed by some words and a second ", then go into STRMODE */
+	/* 2. In STRMODE, detect double quote and deal with it in STRQUOTE */
+<STREND>["] { 
+//	printf("StrEnd\n"); 
+	TOKEN_STRING(string, strbuffer); 
+	strbuffer[0] = '\0'; 
+	BEGIN 0; 
+}
+<STRMODE>[^"\n]*/["] { 
+//	printf("StrMod 1, %s\n", yytext); 
+	LIST;
+	strncat(strbuffer, yytext, MAX_LINE_LENG - strlen(strbuffer)); 
+	BEGIN STREND; 
+}
+<STRMODE>[^"\n]*/["]{2} { 
+//	printf("StrMod 2 \n"); 
+	LIST;
+	strncat(strbuffer, yytext, MAX_LINE_LENG - strlen(strbuffer)); 
+	BEGIN STRQUOTE; 
+}
+<STRQUOTE>["]{2} { 
+//	printf("StrQuote\n"); 
+	LIST;
+	strncat(strbuffer, "\"", 1); 
+	BEGIN STRMODE; 
+}
+<INITIAL>["]/[^\n]*["] { 
+//	printf("StrBegin\n"); 
+	LIST; 
+	BEGIN STRMODE; 
+}
+
+	/* Whitespace */
+[ \t]+ { LIST; }
 
     /* Pseudocomments */
-"//"&[ST][+-][^\n]* { 
-    if (yytext[2] == 'S' && yytext[3] == '+' ) {
+<INITIAL>"//"&[ST][+-] { 
+    if (yytext[3] == 'S' && yytext[4] == '+' ) {
     	opt_src = 1;	    
     } 
-    if (yytext[2] == 'S' && yytext[3] == '-' ) {
- 	opt_src = 0;   
+    if (yytext[3] == 'S' && yytext[4] == '-' ) {
+ 		opt_src = 0;   
     } 
-    if (yytext[2] == 'T' && yytext[3] == '+' ) {
+    if (yytext[3] == 'T' && yytext[4] == '+' ) {
     	opt_tok = 1;
     } 
-    if (yytext[2] == 'T' && yytext[3] == '-' ) {
+    if (yytext[3] == 'T' && yytext[4] == '-' ) {
     	opt_tok = 0;
-    } 
+    }
+	LIST;
+//	printf("[In Pseudo cmt]\n");
+	BEGIN SHORTCOMMENT;	
 }
 
     /* Comments */
-"//"[^\n]* { ; }
-"/*" { BEGIN COMMENT; }
-<COMMENT>"*/" { BEGIN 0; }
-<COMMENT>. { ; }
+<INITIAL>"//" { LIST; BEGIN SHORTCOMMENT; }
+<INITIAL>"/*" { LIST; BEGIN LONGCOMMENT; }
+<LONGCOMMENT>"*/" { LIST; BEGIN 0; }
+<LONGCOMMENT>. { LIST; }
+<SHORTCOMMENT>.*/\r?\n { LIST; BEGIN 0; }
+	/*<SHORTCOMMENT>. { LIST; }*/
 
     /* Newline */
 \n {
@@ -138,8 +170,13 @@ nonZeroOctInt 0+[0-7]*[1-7][0-7]*
     ++line_num;
     buffer[0] = '\0';
     buffer_ptr = buffer;
+	//BEGIN INITIAL;
 }
-    /* Catch the character which is not accepted by rules above */
+
+    /* Identifiers */
+<INITIAL>{letter}({letter}|{digit})* { TOKEN_STRING(id, yytext); }
+
+	/* Catch the character which is not accepted by rules above */
 . {
     printf("Error at line %d: bad character \"%s\"\n", line_num, yytext);
     exit(-1);
