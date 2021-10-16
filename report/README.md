@@ -20,10 +20,10 @@ Also the string constant part took me a long while to figure out the approriate 
 ## Feedback to T.A.s
 
 Overall, the explanation is super clear and the hints are indeed helpful. TA's answer about my question also helped A LOT. Thank you so much from the bottom of my heart!!
-However, in my humble opinion, the explanation in the scientific section is a little bit unclear. It'll be perfect if it's modefied as :
+However, in my humble opinion, the explanation in the scientific section is a little bit unclear. It'll be perfect if it's modified as :
 
-where the coefficient a is a nonzero real number (a nonzero ***decimal*** integer or a nonzero floating-point decimal number)
+where the coefficient a is a nonzero real number (a nonzero ***DECIMAL*** integer or a nonzero floating-point decimal number)
 
-I'm giving this suggestion only because the other part in this part are clearly required to be decimal, so when I read this part I misunderstood the definition of nonzero real number where both nonzero decimal __AND OCTAL__ interger is accpted.
+I'm giving this suggestion only because the other part in this part are clearly required to be decimal, so when I read this part I misunderstood the definition of nonzero real number where __***both***__ nonzero decimal __***AND OCTAL***__ interger is accpted.
 
 But anyway this is only my perspective. My roomate wasn't bothered at this part and she thought that I had been thinking too much :P
