@@ -12,6 +12,16 @@ around 16 hours
 
 Describe the project structure and how you implemented it.
 
+I used several states to complete this project. STRMODE, STRQUOTE, and STREND are for string constant, while LONGCOMMENT and SHORTCOMMENT are for C-style and C++-style comments.
+I assign all the other patterns to be match only at INITIAL state so that once the scanner gets in the above 5 states, it can only match the specific patterns I assigned with those state. (If we didn't specify the <INITIAL> tag at the front of normal patterns, the patterns can be matched at any state, including STRMODE, etc, by default.)
+
+In the Delimeter, Arithmetic, Relational, and Ligical Operators, and Reserved words part, we simply declare the pattern to be matched.
+
+In the integer constants, I first declare octal integer to be composed of digits between 0-7 AND start with a zero. Then, decimal integer can be a zero or any number that starts with a nonzero digit.
+
+As for the Floating-point constants, I use exactly the declaration of decimal integer to be the first part. 
+
+
 ## What is the hardest you think in this project
 
 For me it's the floating-point constant and scientific constant. I repeatedly misunderstood the definition and revised my code many times to fit the requirements.

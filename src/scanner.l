@@ -87,7 +87,6 @@ nonZeroOctInt 0+[1-7][0-7]*
 <INITIAL>0|[1-9]{digit}* { TOKEN_STRING(integer, yytext); }
 
     /* Floating-Point Constants */
-	/*{digits}\.(0?|{digits}[1-9]/[^0]/) { TOKEN_STRING(float, yytext); }*/
 <INITIAL>(0|[1-9]{digit}*)\.(0?|{digit}*[1-9]) { TOKEN_STRING(float, yytext); }
 
     /* Scientific Notations */
@@ -154,7 +153,6 @@ nonZeroOctInt 0+[1-7][0-7]*
 <LONGCOMMENT>"*/" { LIST; BEGIN 0; }
 <LONGCOMMENT>. { LIST; }
 <SHORTCOMMENT>.*/\r?\n { LIST; BEGIN 0; }
-	/*<SHORTCOMMENT>. { LIST; }*/
 
     /* Newline */
 \n {
@@ -164,7 +162,6 @@ nonZeroOctInt 0+[1-7][0-7]*
     ++line_num;
     buffer[0] = '\0';
     buffer_ptr = buffer;
-	//BEGIN INITIAL;
 }
 
     /* Identifiers */
