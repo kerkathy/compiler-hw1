@@ -10,8 +10,6 @@ around 16 hours
 
 ## Project overview
 
-Describe the project structure and how you implemented it.
-
 I used several states to complete this project. STRMODE, STRQUOTE, and STREND are for string constant, while LONGCOMMENT and SHORTCOMMENT are for C-style and C++-style comments.
 I assign all the other patterns to be match only at INITIAL state so that once the scanner gets in the above 5 states, it can only match the specific patterns I assigned with those state. (If we didn't specify the <INITIAL> tag at the front of normal patterns, the patterns can be matched at any state, including STRMODE, etc, by default.)
 
@@ -50,7 +48,7 @@ Also the string constant part took me a long while to figure out the approriate 
 Overall, the explanation is super clear and the hints are indeed helpful. TA's answer about my question also helped A LOT. Thank you so much from the bottom of my heart!!
 However, in my humble opinion, the explanation in the scientific section is a little bit unclear. It'll be perfect if it's modified as :
 
-where the coefficient a is a nonzero real number (a nonzero ***DECIMAL*** integer or a nonzero floating-point decimal number)
+...where the coefficient a is a nonzero real number (a nonzero ***DECIMAL*** integer or a nonzero floating-point decimal number) ... 
 
 I'm giving this suggestion only because the other part in this part are clearly required to be decimal, so when I read this part I misunderstood the definition of nonzero real number where __***both***__ nonzero decimal __***AND OCTAL***__ interger is accpted.
 
