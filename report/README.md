@@ -19,8 +19,26 @@ In the Delimeter, Arithmetic, Relational, and Ligical Operators, and Reserved wo
 
 In the integer constants, I first declare octal integer to be composed of digits between 0-7 AND start with a zero. Then, decimal integer can be a zero or any number that starts with a nonzero digit.
 
-As for the Floating-point constants, I use exactly the declaration of decimal integer to be the first part. 
+As for the Floating-point constants, I use exactly the declaration of decimal integer to be the integral part. Then, the fractional part consist of zero or any digit that ends without 0.
 
+Then for the scientific notations, we define the base to be a non zero integer or a floating point number. They are followed by a dot. The exponent is simply the decimal integer we defined before.
+
+When it comes to string constant, it's broke down into three states:
+Initially, we detect a qoute mark, and look ahead to check if it's followed by another quote mark in the same line. If so, transition the state into STRMODE in order to store the string. 
+In STRMODE, we deal with normal string. Look ahead to check if there exists a double quote. If so, enter STRQUOTE state to deal with this condition. Else, if there exists another quote mark, it must be the end of the string, so we go into STREND state. In both cases, currently read string is stored into string buffer for later use.
+In STRQUOTE, simply read in the double quote and save only one into string buffer. Then, go into STRMODE to check for normal string again.
+In STREND, we're ending the string. We send the stored string in the buffer as output. Then empty the buffer by setting the first character to be '\0.' Afterwards, everything goes back to normal so we change the state to INITIAL.
+Note that except for STREND, we have to LIST the current input so that it can be printed.
+
+When we encounter white spaces including tabs, simply don't do anything other than LIST them so that they can be printed.
+
+For the pseudo comments, apart from recognizing its pattern, it also needs to viewed as C++-styled comments. Thus, the state is transitioned into SHORTCOMMENT afterwards. LIST is also called because we didn't call TOKEN/ TOKEN_STRING/TOKEN_CHAR functions here.
+
+In SHORTCOMMENT state, we only leave after a newline character (\n or \r\n) is detected. Anything before the newline character is ignored.
+
+To deal with C-style comments, we detect it using `/*` , and leave the state upon `*/` is detected. Anything in between is detected by `.` and also neglected. 
+
+Lastly, we catch all words that start with a letter and is followed by letters or digis to be identifiers. We put it in the very last part so that reserved words won't be classified as identifiers. (first match)
 
 ## What is the hardest you think in this project
 

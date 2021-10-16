@@ -24,7 +24,7 @@ static void concatenateString(const char *yytext_ptr);
 digit	[0-9]
 digits  {digit}+
 letter	[a-zA-Z]
-nonzeroDecInt [1-9][0-9]*
+nonZeroDecInt [1-9][0-9]*
 nonZeroDec 0\.0|0\.{digit}*[1-9]|[1-9]{digit}*(\.{digits}[1-9])? 
 nonZeroOctInt 0+[1-7][0-7]*  
 
@@ -84,10 +84,12 @@ nonZeroOctInt 0+[1-7][0-7]*
 
     /* Integer Constants */
 <INITIAL>0[0-7]+ { TOKEN_STRING(oct_integer, yytext); }
-<INITIAL>0|[1-9]{digit}* { TOKEN_STRING(integer, yytext); }
+	/*<INITIAL>0|[1-9]{digit}* { TOKEN_STRING(integer, yytext); }*/
+<INITIAL>0|{nonZeroDecInt} { TOKEN_STRING(integer, yytext); }
 
     /* Floating-Point Constants */
-<INITIAL>(0|[1-9]{digit}*)\.(0?|{digit}*[1-9]) { TOKEN_STRING(float, yytext); }
+	/*<INITIAL>(0|[1-9]{digit}*)\.(0?|{digit}*[1-9]) { TOKEN_STRING(float, yytext); }*/
+<INITIAL>(0|{nonZeroDecInt})\.(0?|{digit}*[1-9]) { TOKEN_STRING(float, yytext); }
 
     /* Scientific Notations */
     /* base: nonzero oct/dec int OR nonzero dec float */
@@ -95,7 +97,8 @@ nonZeroOctInt 0+[1-7][0-7]*
     /* nonzero octal: 0+[0-7]*[1-7][0-7]* */
     /* nonzero dec int/float: 0\.0|0\.{digit}*[1-9]|[1-9]{digit}*(\.{digits}[1-9])? */
     /* exponent: dec int w/ optional sign */
-<INITIAL>({nonZeroDec}|((0|[1-9]{digit}*)\.(0?|{digit}*[1-9])))[Ee][\+-]?(0|[1-9][0-9]*) { TOKEN_STRING(scientific, yytext); }
+	/*<INITIAL>({nonZeroDec}|((0|[1-9]{digit}*)\.(0?|{digit}*[1-9])))[Ee][\+-]?(0|[1-9][0-9]*) { TOKEN_STRING(scientific, yytext); }*/
+<INITIAL>({nonZeroDecInt}|((0|{nonZeroDecInt})\.(0?|{digit}*[1-9])))[Ee][\+-]?(0|{nonZeroDecInt}) { TOKEN_STRING(scientific, yytext); }
 
 
     /* String Constants */
