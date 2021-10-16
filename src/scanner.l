@@ -103,31 +103,26 @@ nonZeroOctInt 0+[1-7][0-7]*
     /* 1. When encounter a " followed by some words and a second ", then go into STRMODE */
 	/* 2. In STRMODE, detect double quote and deal with it in STRQUOTE */
 <STREND>["] { 
-//	printf("StrEnd\n"); 
 	TOKEN_STRING(string, strbuffer); 
 	strbuffer[0] = '\0'; 
 	BEGIN 0; 
 }
 <STRMODE>[^"\n]*/["] { 
-//	printf("StrMod 1, %s\n", yytext); 
 	LIST;
 	strncat(strbuffer, yytext, MAX_LINE_LENG - strlen(strbuffer)); 
 	BEGIN STREND; 
 }
 <STRMODE>[^"\n]*/["]{2} { 
-//	printf("StrMod 2 \n"); 
 	LIST;
 	strncat(strbuffer, yytext, MAX_LINE_LENG - strlen(strbuffer)); 
 	BEGIN STRQUOTE; 
 }
 <STRQUOTE>["]{2} { 
-//	printf("StrQuote\n"); 
 	LIST;
 	strncat(strbuffer, "\"", 1); 
 	BEGIN STRMODE; 
 }
 <INITIAL>["]/[^\n]*["] { 
-//	printf("StrBegin\n"); 
 	LIST; 
 	BEGIN STRMODE; 
 }
@@ -150,7 +145,6 @@ nonZeroOctInt 0+[1-7][0-7]*
     	opt_tok = 0;
     }
 	LIST;
-//	printf("[In Pseudo cmt]\n");
 	BEGIN SHORTCOMMENT;	
 }
 
