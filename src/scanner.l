@@ -23,7 +23,7 @@ static void concatenateString(const char *yytext_ptr);
 
 digit	[0-9]
 digits  {digit}+
-letter	[a-zA-Z_]
+letter	[a-zA-Z]
 nonzeroDecInt [1-9][0-9]*
 nonZeroDec 0\.0|0\.{digit}*[1-9]|[1-9]{digit}*(\.{digits}[1-9])? 
 nonZeroOctInt 0+[1-7][0-7]*  
